@@ -3,9 +3,9 @@ from typing import Optional
 
 items_db: list[Item] = [Item(name="name", description="description")]
 
-# def create_item(item_id: int, item: dict):
-#     items_db[item_id] = item
-#     return item
+def create_item(item: Item) -> Item:
+    items_db.append(item)
+    return item
 
 def read_item(item_id: int) -> Optional[Item]:
     try:

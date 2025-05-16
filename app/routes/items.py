@@ -1,14 +1,12 @@
-from fastapi import APIRouter, HTTPException, Path, Query
+from fastapi import APIRouter, HTTPException, Path, Body
 from app.schemas.item import Item
 from app.crud import items
 
 router = APIRouter()
 
-# Query, Path, Body
-
-# @router.post("/items/")
-# def create_item(item_id: int, item: Item):
-#     return items.create_item(item_id, item.dict())
+@router.post("/items/")
+def create_item(item: Item = Body(..., title="Item Body")) -> Item:
+    return items.create_item(item)
 
 
 @router.get("/items/{item_id}")
@@ -23,6 +21,7 @@ def get_item(item_id: int = Path(..., title="Item id", ge=0)) -> Item:
 def get_items() -> list[Item]:
     return items.read_items()
 
+# TODO: Доделать апи ендпоинты
 
 # @router.put("/items/{item_id}")
 # def update_item(item_id: int, item: Item):
