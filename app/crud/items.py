@@ -13,16 +13,16 @@ def read_item(item_id: int) -> Optional[Item]:
     except IndexError:
         return None
 
+def read_items(skip: int = 0, limit: int = 10) -> list[Item]:
+    return items_db[skip:skip + limit]
 
-def read_items() -> list[Item]:
-    return items_db
+def update_item(item_id: int, item: Item) -> Optional[Item]:
+    if 0 <= item_id < len(items_db):
+        items_db[item_id] = item
+        return item
+    return None
 
-
-# def update_item(item_id: int, item: dict):
-#     if item_id in items_db:
-#         items_db[item_id] = item
-#         return item
-#     return None
-
-# def delete_item(item_id: int):p
-#     return items_db.pop(item_id, None)
+def delete_item(item_id: int) -> Optional[Item]:
+    if 0 <= item_id < len(items_db):
+        return items_db.pop(item_id)
+    return None
