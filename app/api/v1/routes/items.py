@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Path, Query, Body
-
+from typing import Annotated
 from app.schemas.item import Item
 from app.crud import items
 
@@ -7,7 +7,7 @@ router = APIRouter()
 
 @router.post("/items/")
 def create_item(
-    item: Item = Body(..., title="Item Body")
+    item: Annotated[Item, Body(..., title="Item Body")]
 ) -> Item:
     return items.create_item(item)
 
