@@ -8,6 +8,9 @@ from app.schemas import article as article_schema
 router = APIRouter(prefix="/articles", tags=["articles"])
 
 
+# TODO: GET for all articles
+
+
 # POST — создание статьи
 @router.post("/", response_model=article_schema.Article)
 def create_article(
