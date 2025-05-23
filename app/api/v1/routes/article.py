@@ -1,65 +1,69 @@
-from typing import Annotated, List
-
-from fastapi import APIRouter, Body, Depends, Path, Query
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app import models, schemas
-from app.database import SessionLocal, engine
-
-models.Base.metadata.create_all(bind=engine)
+from app import models
+from app.database import get_db
+from app.schemas import article as article_schema
 
 router = APIRouter(prefix="/articles", tags=["articles"])
 
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-DB = Annotated[Session, Depends(get_db)]
-
-
-@router.post("/", response_model=schemas.Article)
-def create_article(article: Annotated[schemas.ArticleCreate, Body()], db: DB):
-    db_article = models.Article(**article.model_dump())
+# POST — создание статьи
+@router.post("/", response_model=article_schema.Article)
+def create_article(
+    article: article_schema.ArticleCreate, db: Session = Depends(get_db)
+):
+    db_article = models.article.Article(**article.dict())
     db.add(db_article)
     db.commit()
     db.refresh(db_article)
     return db_article
 
 
-@router.get("/", response_model=List[schemas.Article])
-def read_articles(
-    db: DB,
-    skip: Annotated[int, Query(ge=0)] = 0,
-    limit: Annotated[int, Query(ge=1, le=100)] = 10,
-):
-    articles = db.query(models.Article).offset(skip).limit(limit).all()
-    return articles
+# GET по ID
+@router.get("/{article_id}", response_model=article_schema.Article)
+def get_article(article_id: int, db: Session = Depends(get_db)):
+    article = (
+        db.query(models.article.Article)
+        .filter(models.article.Article.id == article_id)
+        .first()
+    )
+    if not article:
+        raise HTTPException(status_code=404, detail="Статья не найдена")
+    return article
 
 
-@router.get("/{article_id}", response_model=schemas.Article)
-def read_article(
-    article_id: Annotated[int, Path(title="The ID of the article to get", ge=1)], db: DB
-):
-    pass
-
-
-@router.put("/{article_id}", response_model=schemas.Article)
+# PUT — обновление статьи
+@router.put("/{article_id}", response_model=article_schema.Article)
 def update_article(
-    article_id: Annotated[int, Path(title="The ID of the article to update", ge=1)],
-    updated_article: Annotated[schemas.ArticleCreate, Body()],
-    db: DB,
+    article_id: int,
+    updated_data: article_schema.ArticleCreate,
+    db: Session = Depends(get_db),
 ):
-    pass
+    article = (
+        db.query(models.article.Article)
+        .filter(models.article.Article.id == article_id)
+        .first()
+    )
+    if not article:
+        raise HTTPException(status_code=404, detail="Статья не найдена")
+    for key, value in updated_data.dict().items():
+        setattr(article, key, value)
+    db.commit()
+    db.refresh(article)
+    return article
 
 
-@router.delete("/{article_id}")
-def delete_article(
-    article_id: Annotated[int, Path(title="The ID of the article to delete", ge=1)],
-    db: DB,
-):
-    pass
+# DELETE — удаление статьи
+@router.delete("/{article_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_article(article_id: int, db: Session = Depends(get_db)):
+    article = (
+        db.query(models.article.Article)
+        .filter(models.article.Article.id == article_id)
+        .first()
+    )
+    if not article:
+        raise HTTPException(status_code=404, detail="Статья не найдена")
+    db.delete(article)
+    db.commit()
+    return
