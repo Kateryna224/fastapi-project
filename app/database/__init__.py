@@ -10,8 +10,14 @@ engine = create_engine(
 SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
 Base = declarative_base()
 
+# 💥 Вот здесь добавляем импорт моделей
+from app.models import article, user
 
-# Вот это — важно!
+# 💥 Создаём таблицы в БД
+Base.metadata.create_all(bind=engine)
+
+
+# Подключение сессии к БД
 def get_db():
     db = SessionLocal()
     try:
