@@ -13,7 +13,7 @@ router = APIRouter(prefix="/articles", tags=["articles"])
 def create_article(
     article: article_schema.ArticleCreate, db: Session = Depends(get_db)
 ):
-    db_article = models.article.Article(**article.dict())
+    db_article = models.article.Article(**article.model_dump())
     db.add(db_article)
     db.commit()
     db.refresh(db_article)
@@ -47,7 +47,7 @@ def update_article(
     )
     if not article:
         raise HTTPException(status_code=404, detail="Статья не найдена")
-    for key, value in updated_data.dict().items():
+    for key, value in updated_data.model_dump().items():
         setattr(article, key, value)
     db.commit()
     db.refresh(article)
